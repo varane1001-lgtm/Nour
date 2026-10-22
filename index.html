@@ -1,0 +1,166 @@
+<title>Sorry, Nour</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Quicksand:wght@500;600;700&display=swap">
+<style>
+/* Layout: one centered card that changes scene by scene, like a chat that finally gets its reply */
+:root{
+  --bg:#ffe9ef; --bg2:#ffd3df; --card:#fffafb; --ink:#5a2238; --soft:#a8607b;
+  --rose:#ff5c8a; --rose-dk:#e23d6d; --bubble:#f1e4ff; --line:#f6c6d4;
+  --display:"Sniglet","Quicksand",ui-rounded,system-ui,sans-serif;
+  --body:"Quicksand",ui-rounded,system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{
+  background:radial-gradient(circle at 20% 10%,var(--bg2),transparent 45%),radial-gradient(circle at 85% 90%,var(--bg2),transparent 40%),var(--bg);
+  color:var(--ink);font-family:var(--body);font-size:16px;
+  display:grid;place-items:center;overflow-x:hidden;
+  padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  box-sizing:border-box;
+}
+#floaters{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.fl{position:absolute;bottom:-40px;font-size:22px;color:var(--rose);opacity:.35;animation:up linear infinite}
+@keyframes up{to{transform:translateY(-110vh) rotate(25deg)}}
+.card{position:relative;z-index:1;width:100%;max-width:420px;background:var(--card);border:2px solid var(--line);border-radius:28px;padding:28px 24px;box-shadow:0 14px 40px -18px rgba(226,61,109,.45);box-sizing:border-box}
+.scene{display:flex;flex-direction:column;gap:18px;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.92);opacity:.4}}
+h1,h2{font-family:var(--display);font-weight:800;margin:0;line-height:1.1;text-wrap:balance}
+h1{font-size:2rem} h2{font-size:1.6rem}
+p{margin:0;line-height:1.55}
+.muted{color:var(--soft);font-size:.92rem}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:82%;padding:10px 14px;border-radius:18px;line-height:1.4}
+.her{background:var(--bubble);align-self:flex-start;border-bottom-left-radius:6px}
+.me{background:var(--rose);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
+.seen{align-self:flex-start;font-size:.75rem;color:var(--soft);font-weight:700;letter-spacing:.04em;padding-left:6px}
+.typing{align-self:flex-end;background:var(--rose);border-radius:18px;padding:12px 16px;display:flex;gap:5px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#fff;animation:dot 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{transform:translateY(-4px);opacity:.5}}
+button{font-family:var(--display);font-size:1.1rem;border:0;border-radius:999px;padding:13px 24px;cursor:pointer;transition:transform .15s}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+button:active{transform:scale(.95)}
+.go{background:var(--rose);color:#fff;box-shadow:0 5px 0 var(--rose-dk)}
+.ghost{background:transparent;color:var(--soft);border:2px dashed var(--line)}
+.face{font-size:4.2rem;text-align:center;line-height:1;transition:transform .2s}
+.meter-lbl{display:flex;justify-content:space-between;font-weight:700;font-size:.85rem;color:var(--soft)}
+input[type=range]{width:100%;accent-color:var(--rose);height:28px}
+.mood{text-align:center;font-family:var(--display);font-size:1.2rem;min-height:1.5em}
+.btns{position:relative;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;min-height:60px}
+#no{position:relative;transition:transform .25s,left .25s,top .25s}
+.list{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.list li{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:14px;padding:10px 12px;line-height:1.4}
+.list b{color:var(--rose-dk);font-family:var(--display)}
+.tapzone{display:flex;justify-content:center}
+.bigheart{font-size:5rem;background:none;box-shadow:none;padding:0;color:var(--rose);line-height:1}
+.count{text-align:center;font-weight:700;color:var(--soft)}
+.burst{position:fixed;pointer-events:none;font-size:20px;color:var(--rose);z-index:5;animation:burst .9s ease-out forwards}
+@keyframes burst{to{transform:translate(var(--x),var(--y)) scale(.4);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="floaters" aria-hidden="true"></div>
+<main class="card" id="app"></main>
+
+<script>
+const app=document.getElementById('app');
+// ambient floating hearts
+const fl=document.getElementById('floaters');
+for(let i=0;i<14;i++){const s=document.createElement('span');s.className='fl';s.textContent=['♡','✿','✦'][i%3];
+ s.style.left=Math.random()*100+'%';s.style.animationDuration=(9+Math.random()*10)+'s';s.style.animationDelay=(-Math.random()*15)+'s';s.style.fontSize=(14+Math.random()*16)+'px';fl.appendChild(s)}
+
+function burst(x,y,n=10){for(let i=0;i<n;i++){const b=document.createElement('span');b.className='burst';b.textContent='♥';
+ b.style.left=x+'px';b.style.top=y+'px';const a=Math.random()*Math.PI*2,d=50+Math.random()*80;
+ b.style.setProperty('--x',Math.cos(a)*d+'px');b.style.setProperty('--y',Math.sin(a)*d+'px');document.body.appendChild(b);setTimeout(()=>b.remove(),950)}}
+
+const scenes=[
+// 1 — the unanswered question
+()=>`<div class="scene">
+  <p class="muted">A message for Nour 💬</p>
+  <div class="chat">
+    <div class="bub her">its  ut turn tjaweb ela nefs lqstt</div>
+    <div class="seen">Seen ✓✓ · no reply</div>
+    <div class="typing" aria-label="typing"><i></i><i></i><i></i></div>
+  </div>
+  <h1>Okay. I know. I messed up.</h1>
+  <p>We were right in the middle of talking, you said it was my turn to answer the same question, and I just… never answered. Total ghost move. You have every right to be annoyed.</p>
+  <button class="go" data-next>Read my reply</button>
+</div>`,
+// 2 — the apology
+()=>`<div class="scene">
+  <h2>I'm really sorry, Nour</h2>
+  <p>You answered the question, then passed it back to me, and I skipped my turn. That's not fair at all. You played the game and I just left you hanging.</p>
+  <ul class="list">
+    <li><b>1.</b> My answer is coming. For real this time.</li>
+    <li><b>2.</b> A real answer, not a lazy one-liner.</li>
+    <li><b>3.</b> To make up for it, you get a bonus question. Ask me anything.</li>
+  </ul>
+  <button class="go" data-next>Okay, continue…</button>
+</div>`,
+// 3 — anger meter
+()=>`<div class="scene">
+  <h2>How mad are you right now?</h2>
+  <div class="face" id="face">😤</div>
+  <div class="mood" id="mood">Very, very mad</div>
+  <input type="range" id="meter" min="0" max="100" value="100" aria-label="How mad you are">
+  <div class="meter-lbl"><span>not mad</span><span>furious</span></div>
+  <p class="muted" style="text-align:center">Slide it down a little… please? 🥺</p>
+  <button class="go" data-next id="next3" hidden>Okay, I'm a bit less mad</button>
+</div>`,
+// 4 — collect hugs
+()=>`<div class="scene">
+  <h2>Here, take some hugs</h2>
+  <p>Tap the heart to collect 10 virtual hugs. One for each minute you waited (at least).</p>
+  <div class="tapzone"><button class="bigheart" id="heart" aria-label="Collect a hug">♥</button></div>
+  <div class="count" id="count">0 / 10 hugs</div>
+  <button class="go" data-next id="next4" hidden>All hugs collected ✓</button>
+</div>`,
+// 5 — the big question
+()=>`<div class="scene">
+  <h2>So… are we good, Nour?</h2>
+  <p class="muted">Choose carefully 😌</p>
+  <div class="btns" id="btns">
+    <button class="go" id="yes">Yes, we're good</button>
+    <button class="ghost" id="no">No</button>
+  </div>
+</div>`,
+// 6 — forgiven
+()=>`<div class="scene" style="text-align:center">
+  <div class="face">😄</div>
+  <h1>Thanks, Nour!</h1>
+  <p>You're the best. And yes, it's my turn. I'm answering that question right now, for real this time.</p>
+  <div class="chat">
+    <div class="bub her">its  ut turn tjaweb ela nefs lqstt</div>
+    <div class="bub me">Okay okay, my turn. Answering right now 😅</div>
+  </div>
+  <button class="ghost" data-restart>Watch again</button>
+</div>`
+];
+
+let i=0;
+function show(n){i=n;app.innerHTML=scenes[n]();wire()}
+function wire(){
+  app.querySelectorAll('[data-next]').forEach(b=>b.onclick=e=>{burst(e.clientX,e.clientY,6);show(i+1)});
+  app.querySelectorAll('[data-restart]').forEach(b=>b.onclick=()=>show(0));
+  const m=document.getElementById('meter');
+  if(m){const face=document.getElementById('face'),mood=document.getElementById('mood'),nx=document.getElementById('next3');
+    const steps=[[80,'😤','Very, very mad'],[60,'😠','Still mad'],[40,'😒','Hmm… a bit less'],[20,'🙂','Almost smiling?'],[0,'🥹','Okay, you\'re cute']];
+    m.oninput=()=>{const v=+m.value;const s=steps.find(t=>v>=t[0]);face.textContent=s[1];mood.textContent=s[2];
+      face.style.transform=`scale(${1+(100-v)/250})`;nx.hidden=v>40}}
+  const h=document.getElementById('heart');
+  if(h){let c=0;const ct=document.getElementById('count'),nx=document.getElementById('next4');
+    h.onclick=e=>{if(c>=10)return;c++;ct.textContent=`${c} / 10 hugs`;h.style.transform=`scale(${1+c*.05})`;
+      const r=h.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,8);
+      if(c===10){ct.textContent='10 / 10 hugs. Fully hugged 🤍';nx.hidden=false}}}
+  const no=document.getElementById('no'),yes=document.getElementById('yes');
+  if(no){let tries=0;const lines=['Are you sure?','Really sure?','Think again 🥺','Nour pleeease','The button is scared','Just press yes ♥'];
+    const run=()=>{tries++;no.textContent=lines[Math.min(tries-1,lines.length-1)];
+      no.style.transform=`translate(${(Math.random()-.5)*160}px,${(Math.random()-.5)*60}px) scale(${Math.max(.5,1-tries*.08)})`;
+      yes.style.transform=`scale(${1+tries*.12})`};
+    no.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')run()});
+    no.onclick=run;
+    yes.onclick=e=>{for(let k=0;k<4;k++)setTimeout(()=>burst(innerWidth*Math.random(),innerHeight*Math.random(),14),k*150);show(5)}}
+}
+show(0);
+</script>
